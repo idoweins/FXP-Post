@@ -39,9 +39,10 @@ namespace FXPPost
 
         #endregion
 
+        private bool disposed = false;
+
         public string Name { get; private set; }
         private int UserId { get; set; }
-        private bool Disposed { get { return this.UserId == 0; } }
         private string SecurityToken { get; set; }
         private WebClient webclient = new WebClient();
 
@@ -61,7 +62,7 @@ namespace FXPPost
         }
         private void Login(string username, string password)
         {
-            if (this.Disposed)
+            if (disposed)
                 throw new ObjectDisposedException("FxpUser");
             NameValueCollection nc = new NameValueCollection();
             nc.Add("vb_login_username", username);
@@ -91,7 +92,7 @@ namespace FXPPost
         private void Logout()
         {
 
-            if (this.Disposed)
+            if (disposed)
                 throw new ObjectDisposedException("FxpUser");
             string html = webclient.DownloadString("http://www.fxp.co.il").CorrectHebrew();
             string logouturl = "http://www.fxp.co.il/" + HttpUtility.HtmlDecode(Regex.Match(html, @"<a href=""(login\.php\?do=logout.+?)"">").Groups[1].Value);
@@ -115,21 +116,22 @@ namespace FXPPost
 
         public virtual void Dispose(bool disposing)
         {
-            if (!this.Disposed)
+            if (disposed)
+                return;
+
+            try
             {
-                try
+                this.Logout();
+            }
+            finally
+            {
+                if (disposing)
                 {
-                    this.Logout();
-                }
-                finally
-                {
-                    if (disposing)
-                    {
-                        this.webclient.Dispose();
-                        this.UserId = 0;
-                        this.Name = null;
-                        this.SecurityToken = null;
-                    }
+                    this.webclient.Dispose();
+                    this.UserId = 0;
+                    this.Name = null;
+                    this.SecurityToken = null;
+                    this.disposed = true;
                 }
             }
         }
@@ -165,7 +167,7 @@ namespace FXPPost
         #region Gets
         public Dictionary<string, string> GetPrefixes(int forumId)
         {
-            if (this.Disposed)
+            if (disposed)
                 throw new ObjectDisposedException("FxpUser");
             Dictionary<string, string> prefixes = new Dictionary<string, string>();
 
@@ -183,7 +185,7 @@ namespace FXPPost
         }
         public Dictionary<string, int> GetThreads(int forumId, int page)
         {
-            if (this.Disposed)
+            if (disposed)
                 throw new ObjectDisposedException("FxpUser");
 
             Dictionary<string, int> threads = new Dictionary<string, int>();
@@ -211,7 +213,7 @@ namespace FXPPost
         #region Posts
         public int PostThread(int forumId, string prefixKey, string subject, string content)
         {
-            if (this.Disposed)
+            if (disposed)
                 throw new ObjectDisposedException("FxpUser");
             CheckSecurityToken();
 
@@ -232,7 +234,7 @@ namespace FXPPost
         }
         public void PostComment(int threadId, string content)
         {
-            if (this.Disposed)
+            if (disposed)
                 throw new ObjectDisposedException("FxpUser");
             CheckSecurityToken();
 
