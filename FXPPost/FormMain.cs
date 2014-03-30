@@ -46,9 +46,14 @@ namespace FXPPost
 
         private void buttonLogin_Click(object sender, EventArgs e)
         {
-            FormLogin login = new FormLogin();
-            login.LoggedIn += login_LoggedIn;
-            login.Show();
+            if (Program.User == null || Program.User.LoggedIn == false)
+            {
+                FormLogin login = new FormLogin();
+                login.LoggedIn += login_LoggedIn;
+                login.Show();
+            }
+            else
+                MessageBox.Show("הינך כבר מחובר");
         }
 
         void login_LoggedIn(object sender, EventArgs e)
