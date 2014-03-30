@@ -23,9 +23,7 @@ namespace FXPPost
             TextBox textbox = sender as TextBox;
             if (textbox.Text == "משתמש" || textbox.Text == "סיסמה")
             {
-                textbox.Text = string.Empty;
-                if (textbox == textBoxPassword)
-                    textbox.UseSystemPasswordChar = true;
+                textbox.Text = string.Empty; 
             }
         }
 
@@ -42,6 +40,12 @@ namespace FXPPost
             {
                 MessageBox.Show(ex.Message);
             }
+        }
+
+        private void textBoxPassword_Enter(object sender, EventArgs e)
+        {
+            textBoxPassword.Text = string.Empty;
+            textBoxPassword.UseSystemPasswordChar = true;
         }
 
        

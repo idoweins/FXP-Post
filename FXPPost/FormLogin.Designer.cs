@@ -50,6 +50,7 @@
             this.textBoxPassword.TabIndex = 1;
             this.textBoxPassword.Text = "סיסמה";
             this.textBoxPassword.Click += new System.EventHandler(this.textBox_Click);
+            this.textBoxPassword.Enter += new System.EventHandler(this.textBoxPassword_Enter);
             // 
             // buttonLogin
             // 
