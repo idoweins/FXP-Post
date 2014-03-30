@@ -45,6 +45,7 @@ namespace FXPPost
         private int UserId { get; set; }
         private string SecurityToken { get; set; }
         private WebClient webclient = new WebClient();
+        public bool LoggedIn { get; private set; }
 
 
         #region Initialization
@@ -52,6 +53,7 @@ namespace FXPPost
         {
             try
             {
+                LoggedIn = false;
                 Login(username, password);
                 this.Name = username;
             }
@@ -64,6 +66,8 @@ namespace FXPPost
         {
             if (disposed)
                 throw new ObjectDisposedException("FxpUser");
+            if (LoggedIn)
+                throw new Exception("Already logged in");
             NameValueCollection nc = new NameValueCollection();
             nc.Add("vb_login_username", username);
             nc.Add("do", "login");
@@ -84,6 +88,8 @@ namespace FXPPost
             this.UserId = int.Parse(Regex.Match(cookies, @"bb_nginxcache=(\d+?);").Groups[1].Value);
             foreach (Match match in Regex.Matches(cookies, "bb.+?;"))
                 webclient.Headers["Cookie"] += match.Value;
+
+            LoggedIn = true;
         }
         #endregion
 
@@ -91,9 +97,11 @@ namespace FXPPost
 
         private void Logout()
         {
-
             if (disposed)
                 throw new ObjectDisposedException("FxpUser");
+            if (!LoggedIn)
+                throw new Exception("Already logged out");
+
             string html = webclient.DownloadString("http://www.fxp.co.il").CorrectHebrew();
             string logouturl = "http://www.fxp.co.il/" + HttpUtility.HtmlDecode(Regex.Match(html, @"<a href=""(login\.php\?do=logout.+?)"">").Groups[1].Value);
             webclient.DownloadString(logouturl);
@@ -101,6 +109,7 @@ namespace FXPPost
             if (webclient.ResponseHeaders[HttpResponseHeader.SetCookie].IndexOf("deleted") == -1)
                 throw new Exception("Logout failed");
 
+            LoggedIn = false;
         }
 
         ~FxpUtility()
@@ -121,7 +130,13 @@ namespace FXPPost
 
             try
             {
-                this.Logout();
+                // This condition is neccessary for the following case:
+                // When user tried to log in with incorrect username or password,
+                // an FXPUtility object were created (not logged in to FXP).
+                // Later, when the user tried to connect with correct credentials, the program 
+                // crashed since the old object tried to dispose and log out, but it was already logged out.
+                if (LoggedIn)
+                    this.Logout();
             }
             finally
             {
@@ -215,6 +230,9 @@ namespace FXPPost
         {
             if (disposed)
                 throw new ObjectDisposedException("FxpUser");
+            if (!LoggedIn)
+                throw new Exception("Not logged in");
+
             CheckSecurityToken();
 
             NameValueCollection nc = new NameValueCollection();
@@ -236,6 +254,9 @@ namespace FXPPost
         {
             if (disposed)
                 throw new ObjectDisposedException("FxpUser");
+            if (!LoggedIn)
+                throw new Exception("Not logged in");
+
             CheckSecurityToken();
 
             NameValueCollection nc = new NameValueCollection();

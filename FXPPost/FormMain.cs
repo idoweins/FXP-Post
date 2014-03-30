@@ -19,6 +19,8 @@ namespace FXPPost
 
         void User_LoggedOut(object sender, EventArgs e)
         {
+            this.labelUsername.Text = string.Empty;
+            this.labelUsername.Visible = false;
             MessageBox.Show("ההתנתקות התרחשה בהצלחה");
         }
 
@@ -33,7 +35,11 @@ namespace FXPPost
         private void buttonLogout_Click(object sender, EventArgs e)
         {
             if (Program.User != null)
+            {
                 Program.User.Dispose();
+                Program.User = null;
+                User_LoggedOut(sender, e);
+            }
             else
                 MessageBox.Show("עליך להתחבר");
         }
@@ -47,9 +53,9 @@ namespace FXPPost
 
         void login_LoggedIn(object sender, EventArgs e)
         {
-            MessageBox.Show("התחברת בהצלחה!");
             this.labelUsername.Text = Program.User.Name;
             this.labelUsername.Visible = true;
+            MessageBox.Show("התחברת בהצלחה!");
         }
 
         private void FormMain_FormClosed(object sender, FormClosedEventArgs e)

@@ -22,7 +22,11 @@ namespace FXPPost
         {
             TextBox textbox = sender as TextBox;
             if (textbox.Text == "משתמש" || textbox.Text == "סיסמה")
+            {
                 textbox.Text = string.Empty;
+                if (textbox == textBoxPassword)
+                    textbox.UseSystemPasswordChar = true;
+            }
         }
 
         private void buttonLogin_Click(object sender, EventArgs e)
