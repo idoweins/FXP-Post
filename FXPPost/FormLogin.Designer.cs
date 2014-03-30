@@ -41,6 +41,7 @@
             this.textBoxUsername.TabIndex = 0;
             this.textBoxUsername.Text = "משתמש";
             this.textBoxUsername.Click += new System.EventHandler(this.textBox_Click);
+            this.textBoxUsername.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxUsername_KeyDown);
             // 
             // textBoxPassword
             // 
@@ -50,6 +51,8 @@
             this.textBoxPassword.TabIndex = 1;
             this.textBoxPassword.Text = "סיסמה";
             this.textBoxPassword.Click += new System.EventHandler(this.textBox_Click);
+            this.textBoxPassword.Enter += new System.EventHandler(this.textBoxPassword_Enter);
+            this.textBoxPassword.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxPassword_KeyDown);
             // 
             // buttonLogin
             // 

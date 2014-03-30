@@ -22,10 +22,12 @@ namespace FXPPost
         {
             TextBox textbox = sender as TextBox;
             if (textbox.Text == "משתמש" || textbox.Text == "סיסמה")
-                textbox.Text = string.Empty;
+            {
+                textbox.Text = string.Empty; 
+            }
         }
 
-        private void buttonLogin_Click(object sender, EventArgs e)
+        private void Login()
         {
             try
             {
@@ -40,8 +42,27 @@ namespace FXPPost
             }
         }
 
-       
+        private void buttonLogin_Click(object sender, EventArgs e)
+        {
+            Login();
+        }
 
+        private void textBoxPassword_Enter(object sender, EventArgs e)
+        {
+            textBoxPassword.Text = string.Empty;
+            textBoxPassword.UseSystemPasswordChar = true;
+        }
 
+        private void textBoxPassword_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+                Login();
+        }
+
+        private void textBoxUsername_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+                Login();
+        }
     }
 }

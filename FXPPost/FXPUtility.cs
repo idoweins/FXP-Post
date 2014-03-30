@@ -39,11 +39,13 @@ namespace FXPPost
 
         #endregion
 
+        private bool disposed = false;
+
         public string Name { get; private set; }
         private int UserId { get; set; }
-        private bool Disposed { get { return this.UserId == 0; } }
         private string SecurityToken { get; set; }
         private WebClient webclient = new WebClient();
+        public bool LoggedIn { get; private set; }
 
 
         #region Initialization
@@ -51,6 +53,7 @@ namespace FXPPost
         {
             try
             {
+                LoggedIn = false;
                 Login(username, password);
                 this.Name = username;
             }
@@ -61,8 +64,10 @@ namespace FXPPost
         }
         private void Login(string username, string password)
         {
-            if (this.Disposed)
+            if (disposed)
                 throw new ObjectDisposedException("FxpUser");
+            if (LoggedIn)
+                throw new Exception("Already logged in");
             NameValueCollection nc = new NameValueCollection();
             nc.Add("vb_login_username", username);
             nc.Add("do", "login");
@@ -83,6 +88,8 @@ namespace FXPPost
             this.UserId = int.Parse(Regex.Match(cookies, @"bb_nginxcache=(\d+?);").Groups[1].Value);
             foreach (Match match in Regex.Matches(cookies, "bb.+?;"))
                 webclient.Headers["Cookie"] += match.Value;
+
+            LoggedIn = true;
         }
         #endregion
 
@@ -90,9 +97,11 @@ namespace FXPPost
 
         private void Logout()
         {
-
-            if (this.Disposed)
+            if (disposed)
                 throw new ObjectDisposedException("FxpUser");
+            if (!LoggedIn)
+                throw new Exception("Already logged out");
+
             string html = webclient.DownloadString("http://www.fxp.co.il").CorrectHebrew();
             string logouturl = "http://www.fxp.co.il/" + HttpUtility.HtmlDecode(Regex.Match(html, @"<a href=""(login\.php\?do=logout.+?)"">").Groups[1].Value);
             webclient.DownloadString(logouturl);
@@ -100,6 +109,7 @@ namespace FXPPost
             if (webclient.ResponseHeaders[HttpResponseHeader.SetCookie].IndexOf("deleted") == -1)
                 throw new Exception("Logout failed");
 
+            LoggedIn = false;
         }
 
         ~FxpUtility()
@@ -115,21 +125,28 @@ namespace FXPPost
 
         public virtual void Dispose(bool disposing)
         {
-            if (!this.Disposed)
+            if (disposed)
+                return;
+
+            try
             {
-                try
-                {
+                // This condition is neccessary for the following case:
+                // When user tried to log in with incorrect username or password,
+                // an FXPUtility object were created (not logged in to FXP).
+                // Later, when the user tried to connect with correct credentials, the program 
+                // crashed since the old object tried to dispose and log out, but it was already logged out.
+                if (LoggedIn)
                     this.Logout();
-                }
-                finally
+            }
+            finally
+            {
+                if (disposing)
                 {
-                    if (disposing)
-                    {
-                        this.webclient.Dispose();
-                        this.UserId = 0;
-                        this.Name = null;
-                        this.SecurityToken = null;
-                    }
+                    this.webclient.Dispose();
+                    this.UserId = 0;
+                    this.Name = null;
+                    this.SecurityToken = null;
+                    this.disposed = true;
                 }
             }
         }
@@ -165,7 +182,7 @@ namespace FXPPost
         #region Gets
         public Dictionary<string, string> GetPrefixes(int forumId)
         {
-            if (this.Disposed)
+            if (disposed)
                 throw new ObjectDisposedException("FxpUser");
             Dictionary<string, string> prefixes = new Dictionary<string, string>();
 
@@ -183,7 +200,7 @@ namespace FXPPost
         }
         public Dictionary<string, int> GetThreads(int forumId, int page)
         {
-            if (this.Disposed)
+            if (disposed)
                 throw new ObjectDisposedException("FxpUser");
 
             Dictionary<string, int> threads = new Dictionary<string, int>();
@@ -211,8 +228,11 @@ namespace FXPPost
         #region Posts
         public int PostThread(int forumId, string prefixKey, string subject, string content)
         {
-            if (this.Disposed)
+            if (disposed)
                 throw new ObjectDisposedException("FxpUser");
+            if (!LoggedIn)
+                throw new Exception("Not logged in");
+
             CheckSecurityToken();
 
             NameValueCollection nc = new NameValueCollection();
@@ -232,8 +252,11 @@ namespace FXPPost
         }
         public void PostComment(int threadId, string content)
         {
-            if (this.Disposed)
+            if (disposed)
                 throw new ObjectDisposedException("FxpUser");
+            if (!LoggedIn)
+                throw new Exception("Not logged in");
+
             CheckSecurityToken();
 
             NameValueCollection nc = new NameValueCollection();
